@@ -69,4 +69,4 @@ def optimize_medical_json(input_file, output_file):
         print(f"Xəta baş verdi: {e}")
 
 # Skripti işlət
-optimize_medical_json('xidmetler-kohne.json', 'xidmetler-yeni.json')
+optimize_medical_json('its_xidmetler_tam_siyahi.json', 'xidmetler-yeni.json')

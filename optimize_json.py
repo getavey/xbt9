@@ -2,7 +2,6 @@ import json
 
 def optimize_medical_json(input_file, output_file):
     try:
-        # 1. Köhnə JSON faylını oxuyuruq
         with open(input_file, 'r', encoding='utf-8') as f:
             old_data = json.load(f)
 
@@ -10,41 +9,61 @@ def optimize_medical_json(input_file, output_file):
         new_services = []
 
         for item in old_data:
-            # 2. Kateqoriya məlumatını götürürük
+            # 1. Kateqoriya məlumatı və tarixləri
             cat = item.get('category', {})
             cat_id = cat.get('id')
 
-            # Əgər bu kateqoriya hələ yeni lüğətimizdə yoxdursa, əlavə edirik
             if cat_id and cat_id not in new_categories:
+                cat_name = cat.get('name')
+                for t in cat.get('translations', []):
+                    if t.get('locale') == 'az':
+                        cat_name = t.get('name', cat_name)
+                        break
+
                 new_categories[cat_id] = {
                     "id": cat_id,
-                    "name": cat.get('name'),
-                    "image": cat.get('image')
+                    "name": cat_name,
+                    "image": cat.get('image'),
+                    "status": cat.get('status'),
+                    "created_at": cat.get('created_at'),
+                    "updated_at": cat.get('updated_at')
                 }
 
-            # 3. Xidmət məlumatını sadələşdiririk
-            # Lazımsız null və təkrarlanan sahələri təmizləyirik
-            simplified_service = {
+            # 2. Xidmət adı (yalnız Azərbaycan dilində)
+            service_name = item.get('name')
+            for t in item.get('translations', []):
+                if t.get('locale') == 'az':
+                    service_name = t.get('name', service_name)
+                    break
+
+            # 3. Bütün vacib sahələr
+            optimized_service = {
                 "id": item.get('id'),
                 "cat_id": cat_id,
                 "no": item.get('no'),
-                "name": item.get('name'),
-                "xbt": item.get('xbt') if item.get('xbt') != "Tətbiq edilmir" else None,
-                "price": item.get('price') if item.get('price') else "0"
+                "name": service_name,
+                "note": item.get('note'),
+                "note_detail": item.get('note_detail'),
+                "xbt": item.get('xbt'),
+                "xbt9": item.get('xbt9'),
+                "xbt10": item.get('xbt10'),
+                "price": item.get('price') if item.get('price') else "0",
+                "status": item.get('status'),
+                "order": item.get('order'),
+                "created_at": item.get('created_at'),
+                "updated_at": item.get('updated_at')
             }
-            new_services.append(simplified_service)
+            new_services.append(optimized_service)
 
-        # 4. Yeni strukturu hazırlayırıq
         final_data = {
             "categories": new_categories,
             "services": new_services
         }
 
-        # 5. Yeni fayla yazırıq (yaddaşa qənaət üçün indent=2 kifayətdir)
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(final_data, f, ensure_ascii=False, indent=2)
 
-        print(f"Uğurlu! Fayl kiçildildi: {output_file}")
+        print(f"Tarixlər daxil olmaqla optimizasiya uğurla tamamlandı: {output_file}")
         
     except Exception as e:
         print(f"Xəta baş verdi: {e}")
